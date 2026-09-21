@@ -1,6 +1,3 @@
-Yes — below is the complete **`README.md`** content, cleaned up into valid Markdown and tailored specifically to your **Knowledge Graph and Information Retrieval Systems Virtual Laboratory**.
-
-````markdown
 # Text Preprocessing and Normalization — Virtual Laboratory
 
 ## Knowledge Graph and Information Retrieval Systems
