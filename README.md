@@ -329,11 +329,9 @@ Main Streamlit Application
 ### 1. Clone the Repository
 
 ```bash
-git clone <YOUR_GITHUB_REPOSITORY_URL>
-cd <YOUR_REPOSITORY_NAME>
+git clone https://github.com/sabhansali/text_preprocessing_vlab_kgirs
+cd text_preprocessing_vlab_kgirs
 ```
-
-Replace `<YOUR_GITHUB_REPOSITORY_URL>` with the URL of your GitHub repository.
 
 ---
 
