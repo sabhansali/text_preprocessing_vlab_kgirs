@@ -183,6 +183,89 @@ text-analysis tasks.
 }
 
 # =============================================================================
+# REFERENCES
+# =============================================================================
+
+REFERENCES = [
+    {
+        "citation": (
+            'A. Tyagi, V. K. Jain and V. Kumar, '
+            '"Benchmark Text Preprocessing Techniques in Natural Language Processing," '
+            '2024 4th International Conference on Innovative Sustainable Computational '
+            'Technologies (CISCT), Dehradun, India, 2024, pp. 1-6, '
+            'doi: 10.1109/CISCT62494.2024.11134188.'
+        ),
+        "link": "https://doi.org/10.1109/CISCT62494.2024.11134188",
+        "label": "IEEE Xplore / DOI"
+    },
+    {
+        "citation": (
+            'J. L. Gastaldi, J. Terilla, L. Malagutti, B. DuSell, '
+            'T. Vieira and R. Cotterell, '
+            '"The Foundations of Tokenization: Statistical and Computational Concerns," '
+            'in Proc. International Conference on Learning Representations (ICLR), 2025.'
+        ),
+        "link": "https://arxiv.org/abs/2407.11606",
+        "label": "arXiv"
+    },
+    {
+        "citation": (
+            'J. Camacho-Collados and M. T. Pilehvar, '
+            '"On the Role of Text Preprocessing in Neural Network Architectures: '
+            'An Evaluation Study on Text Categorization and Sentiment Analysis," '
+            'in Proc. 2018 EMNLP Workshop BlackboxNLP: Analyzing and Interpreting '
+            'Neural Networks for NLP, Brussels, Belgium, 2018, pp. 40-46, '
+            'doi: 10.18653/v1/W18-5406.'
+        ),
+        "link": "https://aclanthology.org/W18-5406/",
+        "label": "ACL Anthology"
+    },
+    {
+        "citation": (
+            'N. Babanejad, A. Agrawal, A. An and M. Papagelis, '
+            '"A Comprehensive Analysis of Preprocessing for Word Representation '
+            'Learning in Affective Tasks," in Proc. 58th Annual Meeting of the '
+            'Association for Computational Linguistics (ACL), 2020, pp. 5799-5810, '
+            'doi: 10.18653/v1/2020.acl-main.514.'
+        ),
+        "link": "https://aclanthology.org/2020.acl-main.514/",
+        "label": "ACL Anthology"
+    },
+    {
+        "citation": (
+            'M. F. Porter, "Snowball: A Language for Stemming Algorithms," '
+            'Oct. 2001.'
+        ),
+        "link": "https://snowballstem.org/texts/introduction.html",
+        "label": "Snowball"
+    },
+    {
+        "citation": (
+            'Virtual Labs, Indian Institute of Technology Kharagpur, '
+            '"Virtual Laboratory."'
+        ),
+        "link": "https://vlabs.iitkgp.ac.in/",
+        "label": "IIT Kharagpur Virtual Labs"
+    },
+]
+
+
+def render_references():
+    """Display the experiment references in IEEE style."""
+    st.header("References")
+
+    st.write(
+        "The following references were consulted for the concepts and "
+        "methodologies used in this experiment."
+    )
+
+    for i, reference in enumerate(REFERENCES, start=1):
+        st.markdown(
+            f"**[{i}]** {reference['citation']}  \n"
+            f"[{reference['label']}]({reference['link']})"
+        )
+
+# =============================================================================
 # 2. NLP DEPENDENCY SETUP
 # =============================================================================
 
@@ -692,6 +775,8 @@ def render_theory_section():
         )
         st.table(terms_df)
 
+    st.divider()
+    render_references()
 
 def render_simulation_section():
     st.header("Interactive Text Preprocessing Sandbox")
@@ -1129,7 +1214,7 @@ def main():
     st.sidebar.title("Virtual Lab")
     section = st.sidebar.radio(
         "Lab Navigator",
-        options=["Theory", "Simulation", "Quiz", "Report Generation"],
+        options=["Theory", "Simulation", "Quiz", "Report Generation", "References"],
     )
 
     st.sidebar.divider()
@@ -1172,6 +1257,8 @@ def main():
         render_quiz_section()
     elif section == "Report Generation":
         render_report_section()
+    elif section == "References":
+        render_references()
 
 
 if __name__ == "__main__":
