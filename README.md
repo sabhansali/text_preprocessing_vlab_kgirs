@@ -295,6 +295,7 @@ The project is intentionally implemented as a **single Python file** suitable fo
 text-preprocessing-virtual-lab/
 │
 ├── text_preprocessing_lab.py
+├── requirements.txt
 └── README.md
 ```
 
@@ -364,7 +365,7 @@ source venv/bin/activate
 Install the required Python packages:
 
 ```bash
-pip install streamlit pandas plotly nltk fpdf
+pip install -r requirements.txt
 ```
 
 ---
