@@ -13,6 +13,7 @@ Sections:
 import os
 import re
 import time
+import random
 import html
 import textwrap
 from datetime import datetime
@@ -420,34 +421,34 @@ def preprocessing_statistics(result):
 # 4. QUIZ CONTENT
 # =============================================================================
 
-QUIZ_QUESTIONS = [
+QUESTION_BANK = [
     {
         "id": 1,
         "question": "What is the main purpose of text preprocessing?",
         "options": [
-            "A) To increase random noise in the corpus",
+            "A) To increase random noise",
             "B) To clean and standardize text before analysis",
-            "C) To convert every document into an image",
+            "C) To convert text into images",
             "D) To remove all meaningful words"
         ],
         "answer_index": 1,
-        "explanation": "Preprocessing cleans and standardizes raw text so that it can be used more effectively for indexing and analysis."
+        "explanation": "Text preprocessing cleans and standardizes raw text before analysis."
     },
     {
         "id": 2,
         "question": "What does tokenization do?",
         "options": [
             "A) Divides text into smaller textual units called tokens",
-            "B) Translates text into another language",
-            "C) Encrypts the document",
-            "D) Calculates document length only"
+            "B) Encrypts the document",
+            "C) Translates the document",
+            "D) Deletes the document"
         ],
         "answer_index": 0,
-        "explanation": "Tokenization divides text into units such as words or word-like tokens."
+        "explanation": "Tokenization divides text into smaller units called tokens."
     },
     {
         "id": 3,
-        "question": "Which is an example of a stop word?",
+        "question": "Which of the following is a stop word?",
         "options": [
             "A) algorithm",
             "B) database",
@@ -455,91 +456,575 @@ QUIZ_QUESTIONS = [
             "D) information"
         ],
         "answer_index": 2,
-        "explanation": "Words such as 'the' are common function words that may be removed depending on the task."
+        "explanation": "'The' is a common English stop word."
     },
     {
         "id": 4,
-        "question": "What is a key characteristic of stemming?",
-        "options": [
-            "A) It always produces a valid dictionary word",
-            "B) It commonly removes word suffixes using rules",
-            "C) It requires image recognition",
-            "D) It translates words into numbers"
-        ],
-        "answer_index": 1,
-        "explanation": "Stemming commonly uses rule-based suffix removal and may produce a form that is not a valid dictionary word."
-    },
-    {
-        "id": 5,
-        "question": "What is the goal of lemmatization?",
-        "options": [
-            "A) Produce a linguistically meaningful base form",
-            "B) Add punctuation to every token",
-            "C) Remove all nouns",
-            "D) Increase the vocabulary size"
-        ],
-        "answer_index": 0,
-        "explanation": "Lemmatization aims to map a word to its dictionary base form using linguistic information."
-    },
-    {
-        "id": 6,
-        "question": "Which operation in this experiment converts text to lowercase?",
+        "question": "Which operation converts text into lowercase?",
         "options": [
             "A) Tokenization",
             "B) Normalization",
-            "C) Lemmatization",
-            "D) Stemming"
+            "C) Stemming",
+            "D) Lemmatization"
         ],
         "answer_index": 1,
-        "explanation": "Lowercasing is a common text-normalization operation that reduces case-based variation."
+        "explanation": "Lowercasing is a common normalization operation."
+    },
+    {
+        "id": 5,
+        "question": "What is the main purpose of stemming?",
+        "options": [
+            "A) Translate words",
+            "B) Reduce words to their stems",
+            "C) Add punctuation",
+            "D) Remove documents"
+        ],
+        "answer_index": 1,
+        "explanation": "Stemming reduces related words to a common stem."
+    },
+    {
+        "id": 6,
+        "question": "What is the goal of lemmatization?",
+        "options": [
+            "A) Produce a meaningful base form",
+            "B) Add punctuation",
+            "C) Remove nouns",
+            "D) Increase vocabulary"
+        ],
+        "answer_index": 0,
+        "explanation": "Lemmatization aims to produce linguistically meaningful base forms."
     },
     {
         "id": 7,
-        "question": "Why can stop-word removal reduce the size of an index?",
+        "question": "Which operation can remove words such as 'the', 'is', and 'and'?",
         "options": [
-            "A) It removes frequent words that may have limited retrieval value",
-            "B) It converts every document into one word",
-            "C) It increases the number of punctuation marks",
-            "D) It duplicates every token"
+            "A) Stemming",
+            "B) Tokenization",
+            "C) Stop-word removal",
+            "D) Lemmatization"
         ],
-        "answer_index": 0,
-        "explanation": "Removing frequent, low-information terms can reduce the number of terms stored and processed."
+        "answer_index": 2,
+        "explanation": "Stop-word removal removes selected common words."
     },
     {
         "id": 8,
-        "question": "Which statement correctly distinguishes stemming from lemmatization?",
+        "question": "Which is generally faster?",
         "options": [
-            "A) Stemming is always more linguistically accurate",
-            "B) Lemmatization aims for dictionary base forms",
-            "C) They are identical operations",
-            "D) Lemmatization only removes punctuation"
+            "A) Stemming",
+            "B) Lemmatization",
+            "C) Both always take the same time",
+            "D) Neither"
         ],
-        "answer_index": 1,
-        "explanation": "Lemmatization uses linguistic information and aims to produce meaningful dictionary base forms."
+        "answer_index": 0,
+        "explanation": "Stemming is generally simpler and faster than lemmatization."
     },
     {
         "id": 9,
-        "question": "Why is normalization useful in information retrieval?",
+        "question": "Which method uses linguistic information?",
         "options": [
-            "A) It introduces more spelling variation",
-            "B) It creates a more consistent representation of terms",
-            "C) It prevents tokenization",
-            "D) It removes the need for an index"
+            "A) Stemming",
+            "B) Lemmatization",
+            "C) Tokenization",
+            "D) Normalization"
         ],
         "answer_index": 1,
-        "explanation": "Normalization reduces unnecessary variation so related textual forms can be represented more consistently."
+        "explanation": "Lemmatization uses linguistic and dictionary information."
     },
     {
         "id": 10,
-        "question": "What is the final output of this experiment intended for?",
+        "question": "What is a corpus?",
         "options": [
-            "A) Indexing and further text analysis",
-            "B) Image compression only",
-            "C) Hardware configuration",
-            "D) Audio recording"
+            "A) A collection of text",
+            "B) A database server",
+            "C) A programming language",
+            "D) An image file"
         ],
         "answer_index": 0,
-        "explanation": "The clean standardized corpus can be used for indexing, retrieval, classification, clustering, and other analysis."
+        "explanation": "A corpus is a collection of text documents or text data."
+    },
+
+    {
+        "id": 11,
+        "question": "What is normalization useful for?",
+        "options": [
+            "A) Increasing text variation",
+            "B) Creating a consistent text representation",
+            "C) Adding random symbols",
+            "D) Encrypting text"
+        ],
+        "answer_index": 1,
+        "explanation": "Normalization reduces unnecessary variation in text."
+    },
+    {
+        "id": 12,
+        "question": "Which is an example of punctuation?",
+        "options": [
+            "A) hello",
+            "B) 123",
+            "C) !",
+            "D) token"
+        ],
+        "answer_index": 2,
+        "explanation": "An exclamation mark is punctuation."
+    },
+    {
+        "id": 13,
+        "question": "Which stage usually comes first?",
+        "options": [
+            "A) Lemmatization",
+            "B) Normalization",
+            "C) Stemming",
+            "D) Stop-word removal"
+        ],
+        "answer_index": 1,
+        "explanation": "Normalization is performed early in the preprocessing pipeline."
+    },
+    {
+        "id": 14,
+        "question": "What does whitespace normalization do?",
+        "options": [
+            "A) Removes repeated unnecessary spaces",
+            "B) Adds random spaces",
+            "C) Converts text into images",
+            "D) Deletes all words"
+        ],
+        "answer_index": 0,
+        "explanation": "Whitespace normalization makes spacing consistent."
+    },
+    {
+        "id": 15,
+        "question": "Which of these is a token?",
+        "options": [
+            "A) A word or word-like unit",
+            "B) Only a paragraph",
+            "C) Only a document",
+            "D) Only punctuation"
+        ],
+        "answer_index": 0,
+        "explanation": "A token is a basic textual unit produced by tokenization."
+    },
+    {
+        "id": 16,
+        "question": "Which operation may produce a non-dictionary word?",
+        "options": [
+            "A) Lemmatization",
+            "B) Stemming",
+            "C) Tokenization",
+            "D) Normalization"
+        ],
+        "answer_index": 1,
+        "explanation": "Stemming can produce stems that are not valid dictionary words."
+    },
+    {
+        "id": 17,
+        "question": "Which operation aims to produce dictionary base forms?",
+        "options": [
+            "A) Stemming",
+            "B) Lemmatization",
+            "C) Tokenization",
+            "D) Stop-word removal"
+        ],
+        "answer_index": 1,
+        "explanation": "Lemmatization aims to produce meaningful dictionary base forms."
+    },
+    {
+        "id": 18,
+        "question": "Why is preprocessing useful in search engines?",
+        "options": [
+            "A) It increases random noise",
+            "B) It creates consistent representations",
+            "C) It removes search results",
+            "D) It disables indexing"
+        ],
+        "answer_index": 1,
+        "explanation": "Consistent text representations can improve indexing and retrieval."
+    },
+    {
+        "id": 19,
+        "question": "What is vocabulary in NLP?",
+        "options": [
+            "A) Set of unique terms",
+            "B) Number of documents only",
+            "C) Number of paragraphs",
+            "D) Number of characters"
+        ],
+        "answer_index": 0,
+        "explanation": "Vocabulary is the set of unique terms in the processed corpus."
+    },
+    {
+        "id": 20,
+        "question": "Which stage divides text into individual words?",
+        "options": [
+            "A) Tokenization",
+            "B) Stemming",
+            "C) Lemmatization",
+            "D) Stop-word removal"
+        ],
+        "answer_index": 0,
+        "explanation": "Tokenization divides text into tokens."
+    },
+
+    {
+        "id": 21,
+        "question": "Which preprocessing stage removes unwanted punctuation?",
+        "options": [
+            "A) Normalization",
+            "B) Stemming",
+            "C) Lemmatization",
+            "D) Tokenization"
+        ],
+        "answer_index": 0,
+        "explanation": "Punctuation removal is commonly part of normalization."
+    },
+    {
+        "id": 22,
+        "question": "What does lowercasing achieve?",
+        "options": [
+            "A) Reduces case-based variation",
+            "B) Increases vocabulary",
+            "C) Adds punctuation",
+            "D) Removes all nouns"
+        ],
+        "answer_index": 0,
+        "explanation": "Lowercasing treats uppercase and lowercase forms consistently."
+    },
+    {
+        "id": 23,
+        "question": "Which word is most likely to be removed as a stop word?",
+        "options": [
+            "A) computer",
+            "B) information",
+            "C) the",
+            "D) retrieval"
+        ],
+        "answer_index": 2,
+        "explanation": "'The' is a common stop word."
+    },
+    {
+        "id": 24,
+        "question": "What does stemming commonly use?",
+        "options": [
+            "A) Rule-based suffix removal",
+            "B) Image processing",
+            "C) Audio processing",
+            "D) Encryption"
+        ],
+        "answer_index": 0,
+        "explanation": "Stemming commonly applies rules to remove suffixes."
+    },
+    {
+        "id": 25,
+        "question": "Which produces linguistically meaningful base forms?",
+        "options": [
+            "A) Lemmatization",
+            "B) Tokenization",
+            "C) Stop-word removal",
+            "D) Normalization"
+        ],
+        "answer_index": 0,
+        "explanation": "Lemmatization aims for linguistically meaningful base forms."
+    },
+    {
+        "id": 26,
+        "question": "Which is NOT normally a text preprocessing operation?",
+        "options": [
+            "A) Lowercasing",
+            "B) Tokenization",
+            "C) Stop-word removal",
+            "D) CPU overclocking"
+        ],
+        "answer_index": 3,
+        "explanation": "CPU overclocking is unrelated to text preprocessing."
+    },
+    {
+        "id": 27,
+        "question": "What is the output of tokenization?",
+        "options": [
+            "A) Tokens",
+            "B) Images",
+            "C) Audio signals",
+            "D) Hardware settings"
+        ],
+        "answer_index": 0,
+        "explanation": "Tokenization produces tokens."
+    },
+    {
+        "id": 28,
+        "question": "What can happen to vocabulary after stop-word removal?",
+        "options": [
+            "A) It can decrease",
+            "B) It always doubles",
+            "C) It becomes infinite",
+            "D) It becomes an image"
+        ],
+        "answer_index": 0,
+        "explanation": "Removing common words can reduce vocabulary size."
+    },
+    {
+        "id": 29,
+        "question": "Which operation is generally more linguistically informed?",
+        "options": [
+            "A) Stemming",
+            "B) Lemmatization",
+            "C) Tokenization",
+            "D) Lowercasing"
+        ],
+        "answer_index": 1,
+        "explanation": "Lemmatization uses linguistic information."
+    },
+    {
+        "id": 30,
+        "question": "What is a major purpose of an information retrieval system?",
+        "options": [
+            "A) Find relevant information",
+            "B) Compress images",
+            "C) Edit videos",
+            "D) Control hardware"
+        ],
+        "answer_index": 0,
+        "explanation": "Information retrieval systems find relevant information from collections."
+    },
+
+    {
+        "id": 31,
+        "question": "Which sequence represents the preprocessing pipeline?",
+        "options": [
+            "A) Raw Text ΓåÆ Normalization ΓåÆ Tokenization",
+            "B) Tokenization ΓåÆ Raw Text ΓåÆ Normalization",
+            "C) Lemmatization ΓåÆ Raw Text ΓåÆ Tokenization",
+            "D) Stemming ΓåÆ Raw Text ΓåÆ Stop Words"
+        ],
+        "answer_index": 0,
+        "explanation": "Normalization and tokenization are early stages of the pipeline."
+    },
+    {
+        "id": 32,
+        "question": "Why are stop words sometimes retained?",
+        "options": [
+            "A) Their importance depends on the application",
+            "B) They are always meaningful",
+            "C) They are never common",
+            "D) They are images"
+        ],
+        "answer_index": 0,
+        "explanation": "Stop-word removal depends on the requirements of the application."
+    },
+    {
+        "id": 33,
+        "question": "What does the Porter Stemmer perform?",
+        "options": [
+            "A) Stemming",
+            "B) Translation",
+            "C) Token counting only",
+            "D) Image classification"
+        ],
+        "answer_index": 0,
+        "explanation": "Porter Stemmer is a stemming algorithm."
+    },
+    {
+        "id": 34,
+        "question": "Which Python library is commonly used for NLP resources in this experiment?",
+        "options": [
+            "A) NLTK",
+            "B) NumPy only",
+            "C) Matplotlib only",
+            "D) Flask"
+        ],
+        "answer_index": 0,
+        "explanation": "The application uses NLTK for stemming, lemmatization, and stop words."
+    },
+    {
+        "id": 35,
+        "question": "What does WordNet provide in this experiment?",
+        "options": [
+            "A) Linguistic information for lemmatization",
+            "B) Image files",
+            "C) Audio files",
+            "D) Network connections"
+        ],
+        "answer_index": 0,
+        "explanation": "WordNet is used by the lemmatizer for linguistic information."
+    },
+    {
+        "id": 36,
+        "question": "Which metric counts all tokens before stop-word removal?",
+        "options": [
+            "A) Tokens",
+            "B) Unique stems",
+            "C) Unique lemmas",
+            "D) Final corpus words"
+        ],
+        "answer_index": 0,
+        "explanation": "The Tokens statistic counts tokens generated during tokenization."
+    },
+    {
+        "id": 37,
+        "question": "What does 'Unique tokens' measure?",
+        "options": [
+            "A) Number of distinct filtered tokens",
+            "B) Total characters only",
+            "C) Number of documents",
+            "D) Number of sentences only"
+        ],
+        "answer_index": 0,
+        "explanation": "Unique tokens represent distinct terms after filtering."
+    },
+    {
+        "id": 38,
+        "question": "What is the final standardized corpus in this application?",
+        "options": [
+            "A) Space-separated lemmatized terms",
+            "B) Raw input only",
+            "C) Images",
+            "D) Audio"
+        ],
+        "answer_index": 0,
+        "explanation": "The final corpus is created by joining the lemmatized terms."
+    },
+    {
+        "id": 39,
+        "question": "What can preprocessing help reduce?",
+        "options": [
+            "A) Unnecessary textual variation",
+            "B) Computer memory to zero",
+            "C) Internet speed",
+            "D) Screen size"
+        ],
+        "answer_index": 0,
+        "explanation": "Preprocessing reduces unnecessary variation in textual data."
+    },
+    {
+        "id": 40,
+        "question": "Which task can use a clean standardized corpus?",
+        "options": [
+            "A) Classification",
+            "B) Keyboard repair",
+            "C) Hardware testing",
+            "D) Screen calibration"
+        ],
+        "answer_index": 0,
+        "explanation": "Clean text can be used for classification and other NLP tasks."
+    },
+
+    {
+        "id": 41,
+        "question": "Which task can use text preprocessing?",
+        "options": [
+            "A) Search",
+            "B) Retrieval",
+            "C) Text classification",
+            "D) All of the above"
+        ],
+        "answer_index": 3,
+        "explanation": "Preprocessing is useful in search, retrieval, classification, and many other tasks."
+    },
+    {
+        "id": 42,
+        "question": "What happens when punctuation is removed?",
+        "options": [
+            "A) Text becomes more standardized",
+            "B) Text becomes an image",
+            "C) All words disappear",
+            "D) Documents are deleted"
+        ],
+        "answer_index": 0,
+        "explanation": "Removing punctuation can create a cleaner standardized representation."
+    },
+    {
+        "id": 43,
+        "question": "Which stage produces stems?",
+        "options": [
+            "A) Stemming",
+            "B) Tokenization",
+            "C) Normalization",
+            "D) Stop-word removal"
+        ],
+        "answer_index": 0,
+        "explanation": "Stemming produces reduced word stems."
+    },
+    {
+        "id": 44,
+        "question": "Which stage produces lemmas?",
+        "options": [
+            "A) Lemmatization",
+            "B) Stemming",
+            "C) Tokenization",
+            "D) Normalization"
+        ],
+        "answer_index": 0,
+        "explanation": "Lemmatization produces lemma or dictionary base forms."
+    },
+    {
+        "id": 45,
+        "question": "What is text mining?",
+        "options": [
+            "A) Extracting useful information from text",
+            "B) Mining physical materials",
+            "C) Compressing images",
+            "D) Creating hardware"
+        ],
+        "answer_index": 0,
+        "explanation": "Text mining extracts useful information and patterns from textual data."
+    },
+    {
+        "id": 46,
+        "question": "Why can preprocessing improve indexing?",
+        "options": [
+            "A) It creates more consistent terms",
+            "B) It removes the index",
+            "C) It deletes all documents",
+            "D) It stops searching"
+        ],
+        "answer_index": 0,
+        "explanation": "Consistent terms can make indexing more efficient and useful."
+    },
+    {
+        "id": 47,
+        "question": "What is an inflected word form?",
+        "options": [
+            "A) A grammatical variation of a word",
+            "B) An image",
+            "C) A database",
+            "D) A programming language"
+        ],
+        "answer_index": 0,
+        "explanation": "Inflected forms are grammatical variations such as plural or tense forms."
+    },
+    {
+        "id": 48,
+        "question": "Which operation can help handle different cases such as 'Apple' and 'apple'?",
+        "options": [
+            "A) Lowercasing",
+            "B) Stemming",
+            "C) Lemmatization",
+            "D) Token counting"
+        ],
+        "answer_index": 0,
+        "explanation": "Lowercasing makes different letter cases consistent."
+    },
+    {
+        "id": 49,
+        "question": "Which application can benefit from text preprocessing?",
+        "options": [
+            "A) E-commerce search",
+            "B) Information retrieval",
+            "C) NLP systems",
+            "D) All of the above"
+        ],
+        "answer_index": 3,
+        "explanation": "All these applications can use standardized text."
+    },
+    {
+        "id": 50,
+        "question": "What is the overall goal of this experiment?",
+        "options": [
+            "A) Convert raw text into a clean standardized representation",
+            "B) Convert text into images",
+            "C) Increase unnecessary words",
+            "D) Remove all text"
+        ],
+        "answer_index": 0,
+        "explanation": "The experiment demonstrates how raw text can be cleaned and standardized."
     },
 ]
 
@@ -1198,7 +1683,235 @@ def render_theory_section():
 
     st.divider()
     render_references()
+def render_case_study_intro():
+    """Attention-grabbing real-world case study shown at the top of the Simulation tab."""
 
+    st.markdown(
+        """
+        <style>
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(14px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .case-study-hero {
+            background: linear-gradient(-45deg, #0f172a, #1e3a8a, #2563eb, #0ea5e9);
+            background-size: 300% 300%;
+            animation: gradientShift 8s ease infinite;
+            padding: 32px 34px;
+            border-radius: 16px;
+            color: white;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(30, 58, 138, 0.35);
+        }
+        .live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #ef4444;
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            animation: pulse 2s infinite;
+            margin-bottom: 12px;
+        }
+        .live-dot {
+            width: 7px; height: 7px;
+            background: white;
+            border-radius: 50%;
+        }
+        .case-study-hero h2 {
+            margin: 0 0 8px 0;
+            font-size: 28px;
+            font-weight: 800;
+        }
+        .case-study-hero p {
+            margin: 0;
+            font-size: 15.5px;
+            opacity: 0.94;
+            max-width: 900px;
+            line-height: 1.5;
+        }
+        .case-study-hero .highlight {
+            background: rgba(250, 204, 21, 0.25);
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-weight: 700;
+            color: #fde68a;
+        }
+
+        .stat-strip {
+            display: flex;
+            gap: 14px;
+            margin: 18px 0 22px 0;
+            flex-wrap: wrap;
+        }
+        .stat-box {
+            flex: 1;
+            min-width: 150px;
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            border: 1px solid #bfdbfe;
+            border-radius: 12px;
+            padding: 14px 16px;
+            text-align: center;
+            animation: fadeInUp 0.6s ease;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: 800;
+            color: #1e3a8a;
+            display: block;
+        }
+        .stat-label {
+            font-size: 11.5px;
+            color: #475569;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .app-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 18px 18px 16px 18px;
+            height: 100%;
+            margin-bottom: 10px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        }
+        .app-card:hover {
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: 0 12px 24px rgba(37, 99, 235, 0.18);
+            border-color: #93c5fd;
+        }
+        .app-card h4 {
+            margin: 0 0 6px 0;
+            font-size: 16px;
+            color: #1e3a8a;
+            font-weight: 700;
+        }
+        .app-card p {
+            margin: 0;
+            font-size: 13.5px;
+            color: #334155;
+            line-height: 1.45;
+        }
+        .app-icon {
+            font-size: 30px;
+            margin-bottom: 8px;
+            display: block;
+        }
+        </style>
+
+        <div class="case-study-hero">
+            <div class="live-badge"><span class="live-dot"></span> RUNNING RIGHT NOW, BILLIONS OF TIMES A DAY</div>
+            <h2>🔍 The Invisible Engine Behind Every Search, Text & Tap</h2>
+            <p>
+                Right now — as you read this — <span class="highlight">over 100,000 Google searches</span>
+                are being processed every second. Before any of them return a single result, your query
+                gets torn apart, cleaned, and rebuilt by the exact same steps you're about to run below:
+                <b>normalization → tokenization → stop-word removal → stemming → lemmatization.</b>
+                This isn't a toy exercise — it's the hidden layer powering search engines, voice
+                assistants, spam filters, and every AI chatbot you've ever used.
+            </p>
+        </div>
+
+        <div class="stat-strip">
+            <div class="stat-box">
+                <span class="stat-number">8.5B+</span>
+                <span class="stat-label">Google searches / day</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-number">347K</span>
+                <span class="stat-label">Tweets posted / minute</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-number">45%</span>
+                <span class="stat-label">Of all emails are spam</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-number">4.3B</span>
+                <span class="stat-label">Voice assistant users worldwide</span>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown("#### 🌍 Where This Exact Pipeline Runs in the Real World")
+
+    apps = [
+        {
+            "icon": "🔎",
+            "title": "Search Engines",
+            "desc": (
+                "\"best affordable running shoes\" gets normalized, tokenized, and stemmed "
+                "so Google can match it against billions of pages — regardless of tense, "
+                "case, or spelling."
+            ),
+        },
+        {
+            "icon": "🤖",
+            "title": "Voice Assistants",
+            "desc": (
+                "Siri and Alexa strip filler words before intent detection, so "
+                "\"Can you PLEASE turn the lights on?!\" is understood the same as "
+                "\"turn lights on.\""
+            ),
+        },
+        {
+            "icon": "🚫",
+            "title": "Spam & Fraud Filters",
+            "desc": (
+                "Email providers preprocess millions of messages per second to spot "
+                "\"WIN\", \"winning\", \"winner!!!\" as one underlying signal."
+            ),
+        },
+        {
+            "icon": "📊",
+            "title": "Sentiment Analysis",
+            "desc": (
+                "Brands preprocess tweets and reviews at scale — removing noise and "
+                "normalizing slang — before classifying sentiment automatically."
+            ),
+        },
+    ]
+
+    cols = st.columns(4)
+    for col, app in zip(cols, apps):
+        with col:
+            st.markdown(
+                f"""
+                <div class="app-card">
+                    <span class="app-icon">{app['icon']}</span>
+                    <h4>{app['title']}</h4>
+                    <p>{app['desc']}</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+    st.success(
+        "⚡ **Your turn:** The sandbox below runs the identical pipeline — at a scale you "
+        "can actually *see*, step by step. Type something in and watch raw text become "
+        "machine-ready in real time."
+    )
+
+    st.divider()
 def render_simulation_section():
     st.header("Interactive Text Preprocessing Sandbox")
     st.write(
@@ -1206,7 +1919,7 @@ def render_simulation_section():
         "The output of every stage is displayed so that the transformation "
         "from raw text to standardized text can be observed."
     )
-
+    render_case_study_intro()
     sample_texts = {
         "Sample 1 - Basic NLP": (
             "The QUICK brown foxes are running quickly! They jumped over the lazy dogs."
@@ -1408,22 +2121,40 @@ def render_simulation_section():
 
 def render_quiz_section():
     st.header("Concept Assessment Quiz")
+
     st.write(
-        "Answer all questions and submit the quiz to receive instant "
-        "self-grading feedback."
+        "This quiz contains 50 questions in the question bank. "
+        "Each attempt randomly selects 10 questions."
     )
 
+    # Create a new random quiz
+    if (
+        "current_quiz" not in st.session_state
+        or st.button("Start New Quiz / Shuffle Questions")
+    ):
+        st.session_state["current_quiz"] = random.sample(QUESTION_BANK, 10)
+        st.session_state["quiz_answers"] = {}
+        st.session_state["quiz_submitted"] = False
+        st.session_state["quiz_score"] = 0
+        st.rerun()
+
+    current_quiz = st.session_state["current_quiz"]
+
     with st.form("lab_quiz_form"):
+
         user_responses = {}
 
-        for q in QUIZ_QUESTIONS:
-            st.subheader(f"Question {q['id']}")
+        for i, q in enumerate(current_quiz, start=1):
+
+            st.subheader(f"Question {i}")
+
             selected = st.radio(
                 q["question"],
                 q["options"],
                 index=st.session_state["quiz_answers"].get(q["id"], 0),
                 key=f"quiz_radio_{q['id']}",
             )
+
             user_responses[q["id"]] = q["options"].index(selected)
 
         submitted = st.form_submit_button(
@@ -1433,45 +2164,55 @@ def render_quiz_section():
         )
 
     if submitted:
+
         score = 0
+
         st.session_state["quiz_answers"] = user_responses
         st.session_state["quiz_submitted"] = True
 
         st.divider()
         st.subheader("Evaluation Results and Feedback")
 
-        for q in QUIZ_QUESTIONS:
+        for i, q in enumerate(current_quiz, start=1):
+
             user_ans = user_responses[q["id"]]
             correct_ans = q["answer_index"]
 
             if user_ans == correct_ans:
+
                 score += 1
+
                 st.success(
-                    f"Question {q['id']}: Correct\n\n"
+                    f"Question {i}: Correct\n\n"
                     f"{q['explanation']}"
                 )
+
             else:
+
                 st.error(
-                    f"Question {q['id']}: Incorrect\n\n"
+                    f"Question {i}: Incorrect\n\n"
                     f"Your answer: {q['options'][user_ans]}\n\n"
                     f"Correct answer: {q['options'][correct_ans]}\n\n"
                     f"Reason: {q['explanation']}"
                 )
 
         st.session_state["quiz_score"] = score
-        percentage = (score / len(QUIZ_QUESTIONS)) * 100
+
+        percentage = (score / len(current_quiz)) * 100
+
         st.info(
-            f"Final Score: **{score} / {len(QUIZ_QUESTIONS)} "
+            f"Final Score: **{score} / {len(current_quiz)} "
             f"({percentage:.0f}%)**"
         )
 
     elif st.session_state.get("quiz_submitted", False):
+
         score = st.session_state.get("quiz_score", 0)
+
         st.success(
             f"Quiz already submitted. Current score: "
-            f"**{score} / {len(QUIZ_QUESTIONS)}**"
+            f"**{score} / {len(current_quiz)}**"
         )
-
 
 def render_report_section():
     st.header("Report Generation")
@@ -1545,7 +2286,7 @@ def render_report_section():
     )
     st.write(
         f"**Quiz Score:** {st.session_state.get('quiz_score', 0)} / "
-        f"{len(QUIZ_QUESTIONS)}"
+        f"{len(QUESTION_BANK)}"
     )
 
     st.write("**Final Standardized Corpus:**")
@@ -1570,7 +2311,7 @@ def render_report_section():
         date_str=str(lab_date),
         trials_df=trials_df,
         quiz_score=st.session_state.get("quiz_score", 0),
-        quiz_total=len(QUIZ_QUESTIONS),
+        quiz_total=len(QUESTION_BANK),
         student_notes=student_notes,
         current_result=current_result,
     )
@@ -1678,7 +2419,7 @@ def main():
     if st.session_state.get("quiz_submitted", False):
         st.sidebar.write(
             f"Quiz Score: **{st.session_state.get('quiz_score', 0)} / "
-            f"{len(QUIZ_QUESTIONS)}**"
+            f"{len(QUESTION_BANK)}**"
         )
 
     st.sidebar.divider()
