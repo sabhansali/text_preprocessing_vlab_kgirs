@@ -1056,9 +1056,9 @@ def render_preprocessing_simulator(text: str, remove_stops=True):
         else "Pipeline Complete ✓"
     )
 
-    # Dedented and stripped for the same reason as pipeline_css above: any
-    # left-over common leading whitespace on every line would make Markdown
-    # treat this whole block as a preformatted code block instead of HTML.
+    # Built as a single concatenated string (no blank lines, no leading
+    # indentation on any line) so Markdown never mistakes this HTML block
+    # for a preformatted code block.
     card_html = (
         '<div class="sim-card">'
         f'<div class="sim-step-label">STEP {current_index + 1} OF {total}</div>'
@@ -1076,7 +1076,6 @@ def render_preprocessing_simulator(text: str, remove_stops=True):
         '</div>'
     )
     st.markdown(card_html, unsafe_allow_html=True)
-
 
     # Controls.
     previous_col, play_col, next_col, restart_col = st.columns(4)
