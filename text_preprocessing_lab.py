@@ -2286,7 +2286,7 @@ def render_report_section():
     )
     st.write(
         f"**Quiz Score:** {st.session_state.get('quiz_score', 0)} / "
-        f"{len(QUESTION_BANK)}"
+        "10"
     )
 
     st.write("**Final Standardized Corpus:**")
@@ -2311,7 +2311,7 @@ def render_report_section():
         date_str=str(lab_date),
         trials_df=trials_df,
         quiz_score=st.session_state.get("quiz_score", 0),
-        quiz_total=len(QUESTION_BANK),
+        quiz_total=10,
         student_notes=student_notes,
         current_result=current_result,
     )
@@ -2419,7 +2419,7 @@ def main():
     if st.session_state.get("quiz_submitted", False):
         st.sidebar.write(
             f"Quiz Score: **{st.session_state.get('quiz_score', 0)} / "
-            f"{len(QUESTION_BANK)}**"
+            "10**"
         )
 
     st.sidebar.divider()
