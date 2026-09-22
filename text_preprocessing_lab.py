@@ -12,6 +12,9 @@ Sections:
 
 import os
 import re
+import time
+import html
+import textwrap
 from datetime import datetime
 from io import BytesIO
 
@@ -745,9 +748,428 @@ def generate_pdf_report(
     return str(pdf_output).encode("latin-1")
 
 
+
+# =============================================================================
+# 5A. INTERACTIVE PREPROCESSING SIMULATOR
+# =============================================================================
+
+def _sim_format(value):
+    """Format simulator values for readable display."""
+    if isinstance(value, list):
+        return "[" + ", ".join(f'"{item}"' for item in value) + "]"
+    return str(value or "(empty)")
+
+
+def build_simulation_stages(text: str, remove_stops=True):
+    """
+    Build educational preprocessing stages separately so lowercasing and
+    punctuation removal can be demonstrated as distinct operations.
+    """
+    original = str(text or "")
+
+    lowercase = original.lower()
+    lowercase = re.sub(r"[\r\n\t]+", " ", lowercase)
+    lowercase = re.sub(r"\s+", " ", lowercase).strip()
+
+    # Keep punctuation visible during tokenization so students can see that
+    # punctuation removal is a separate step.
+    tokenized = re.findall(r"\b[\w']+\b|[^\w\s]", lowercase)
+
+    # Stop-word removal applies only to word tokens; punctuation remains here.
+    if remove_stops:
+        after_stopwords = [
+            token for token in tokenized
+            if not (re.fullmatch(r"[a-z0-9']+", token) and token in STOP_WORDS)
+        ]
+    else:
+        after_stopwords = tokenized.copy()
+
+    punctuation_removed = [
+        token for token in after_stopwords
+        if re.fullmatch(r"[a-z0-9]+", token)
+    ]
+
+    stems = stem_tokens(punctuation_removed)
+    lemmas = lemmatize_tokens(punctuation_removed)
+    final_text = " ".join(lemmas)
+
+    return [
+        {
+            "short": "Original",
+            "title": "Original Sentence",
+            "before": original,
+            "after": original,
+            "action": "Reading the raw sentence...",
+            "explanation": (
+                "This is the unprocessed input exactly as entered by the user. "
+                "It may contain uppercase letters, punctuation, stop words, and "
+                "different grammatical word forms."
+            ),
+            "tooltip": "Raw input before any preprocessing is applied.",
+        },
+        {
+            "short": "Lowercase",
+            "title": "Lowercasing",
+            "before": original,
+            "after": lowercase,
+            "action": "Converting all letters to lowercase...",
+            "explanation": (
+                "Lowercasing converts uppercase and lowercase variants into a "
+                "consistent form. For example, 'Students' and 'students' become "
+                "the same textual form."
+            ),
+            "tooltip": "Converts uppercase characters to lowercase.",
+        },
+        {
+            "short": "Tokenize",
+            "title": "Tokenization",
+            "before": lowercase,
+            "after": tokenized,
+            "action": "Splitting the sentence into tokens...",
+            "explanation": (
+                "Tokenization divides the sentence into smaller textual units. "
+                "Here, words and punctuation are temporarily represented as "
+                "separate tokens so later operations can be demonstrated."
+            ),
+            "tooltip": "Splits the sentence into individual textual units called tokens.",
+        },
+        {
+            "short": "Stop Words",
+            "title": "Stop-word Removal",
+            "before": tokenized,
+            "after": after_stopwords,
+            "action": (
+                "Removing common English stop words..."
+                if remove_stops
+                else "Stop-word removal is disabled..."
+            ),
+            "explanation": (
+                "Common function words such as 'the', 'are', and 'in' can be "
+                "removed when they contribute little to the retrieval task."
+                if remove_stops
+                else
+                "Stop-word removal is disabled, so the word tokens are preserved."
+            ),
+            "tooltip": "Removes frequent function words such as the, is, are, in, and of.",
+        },
+        {
+            "short": "Punctuation",
+            "title": "Punctuation Removal",
+            "before": after_stopwords,
+            "after": punctuation_removed,
+            "action": "Removing punctuation and special-symbol tokens...",
+            "explanation": (
+                "Punctuation marks and special symbols are removed so that the "
+                "remaining data contains clean word and number tokens."
+            ),
+            "tooltip": "Removes punctuation and special-symbol tokens.",
+        },
+        {
+            "short": "Stem/Lemma",
+            "title": "Stemming & Lemmatization",
+            "before": punctuation_removed,
+            "after": {
+                "Stems": stems,
+                "Lemmas": lemmas,
+            },
+            "action": "Reducing words to simpler base forms...",
+            "explanation": (
+                "Stemming applies rule-based reduction and may produce non-words. "
+                "Lemmatization aims to produce linguistically meaningful base "
+                "forms. Both results are shown for comparison."
+            ),
+            "tooltip": "Compares Porter stems with WordNet lemma forms.",
+        },
+        {
+            "short": "Final",
+            "title": "Final Preprocessed Text",
+            "before": lemmas,
+            "after": final_text,
+            "action": "Building the standardized corpus...",
+            "explanation": (
+                "The processed lemma tokens are joined to create the final clean "
+                "corpus that can be used for indexing and further text analysis."
+            ),
+            "tooltip": "Joins the processed tokens into the final standardized corpus.",
+        },
+    ]
+
+
+def render_preprocessing_simulator(text: str, remove_stops=True):
+    """Render the interactive preprocessing animation box."""
+    stages = build_simulation_stages(text, remove_stops)
+    total = len(stages)
+
+    if "sim_step" not in st.session_state:
+        st.session_state["sim_step"] = 0
+    if "sim_playing" not in st.session_state:
+        st.session_state["sim_playing"] = False
+    if "sim_speed" not in st.session_state:
+        st.session_state["sim_speed"] = 1.5
+    if "sim_signature" not in st.session_state:
+        st.session_state["sim_signature"] = None
+
+    signature = (text, bool(remove_stops))
+    if st.session_state["sim_signature"] != signature:
+        st.session_state["sim_signature"] = signature
+        st.session_state["sim_step"] = 0
+        st.session_state["sim_playing"] = False
+
+    st.session_state["sim_step"] = min(
+        max(int(st.session_state["sim_step"]), 0),
+        total - 1
+    )
+
+    st.markdown("### Interactive Preprocessing Simulation")
+
+    # Pipeline CSS. Dedented and stripped so Markdown never mistakes the
+    # leading whitespace of this triple-quoted string for a code block.
+    pipeline_css = textwrap.dedent("""
+        <style>
+        .sim-pipeline {
+            display: flex;
+            align-items: stretch;
+            gap: 7px;
+            width: 100%;
+            margin: 0.4rem 0 1rem 0;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+        .sim-node {
+            flex: 1 0 105px;
+            min-width: 105px;
+            border: 1px solid rgba(128,128,128,.35);
+            border-radius: 10px;
+            padding: 10px 7px;
+            text-align: center;
+            font-size: 0.82rem;
+            font-weight: 650;
+            background: rgba(128,128,128,.08);
+            transition: all .2s ease;
+        }
+        .sim-node.done {
+            border-color: rgba(34,197,94,.75);
+            background: rgba(34,197,94,.12);
+        }
+        .sim-node.active {
+            border: 2px solid #2563eb;
+            background: rgba(37,99,235,.15);
+            box-shadow: 0 0 0 3px rgba(37,99,235,.08);
+            transform: translateY(-2px);
+        }
+        .sim-node.future {
+            opacity: .70;
+        }
+        .sim-arrow {
+            align-self: center;
+            font-size: 1.1rem;
+            opacity: .55;
+        }
+        .sim-card {
+            border: 1px solid rgba(128,128,128,.35);
+            border-radius: 16px;
+            padding: 1.2rem 1.3rem;
+            background: rgba(128,128,128,.035);
+            margin-bottom: 0.8rem;
+        }
+        .sim-step-label {
+            font-size: .85rem;
+            letter-spacing: .08em;
+            font-weight: 750;
+            opacity: .72;
+        }
+        .sim-title {
+            font-size: 1.45rem;
+            font-weight: 750;
+            margin: .15rem 0 .8rem 0;
+        }
+        .sim-box-label {
+            font-size: .78rem;
+            font-weight: 750;
+            opacity: .68;
+            margin-bottom: .25rem;
+        }
+        .sim-value {
+            border-radius: 10px;
+            padding: .75rem .9rem;
+            background: rgba(128,128,128,.09);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+        .sim-action {
+            text-align: center;
+            padding: .7rem;
+            font-weight: 700;
+            color: #2563eb;
+        }
+        .sim-explain {
+            border-left: 4px solid #2563eb;
+            padding: .65rem .9rem;
+            margin-top: .8rem;
+            background: rgba(37,99,235,.07);
+            border-radius: 0 8px 8px 0;
+        }
+        .sim-next {
+            margin-top: .8rem;
+            font-weight: 700;
+        }
+        </style>
+    """).strip()
+    st.markdown(pipeline_css, unsafe_allow_html=True)
+
+    current_index = st.session_state["sim_step"]
+    current = stages[current_index]
+
+    # title= creates the browser tooltip on hover.
+    pipeline_html = '<div class="sim-pipeline">'
+    for i, stage in enumerate(stages):
+        if i < current_index:
+            state = "done"
+        elif i == current_index:
+            state = "active"
+        else:
+            state = "future"
+
+        pipeline_html += (
+            f'<div class="sim-node {state}" title="{stage["tooltip"]}">'
+            f'{i + 1}. {stage["short"]}</div>'
+        )
+        if i < total - 1:
+            pipeline_html += '<div class="sim-arrow">→</div>'
+    pipeline_html += "</div>"
+    st.markdown(pipeline_html, unsafe_allow_html=True)
+
+    before_value = _sim_format(current["before"])
+    after_value = current["after"]
+    if isinstance(after_value, dict):
+        after_value = (
+            "STEMS:\n" + _sim_format(after_value["Stems"]) +
+            "\n\nLEMMAS:\n" + _sim_format(after_value["Lemmas"])
+        )
+    else:
+        after_value = _sim_format(after_value)
+
+    next_text = (
+        f'Next Step → {stages[current_index + 1]["title"]}'
+        if current_index < total - 1
+        else "Pipeline Complete ✓"
+    )
+
+    # Dedented and stripped for the same reason as pipeline_css above: any
+    # left-over common leading whitespace on every line would make Markdown
+    # treat this whole block as a preformatted code block instead of HTML.
+    card_html = (
+        '<div class="sim-card">'
+        f'<div class="sim-step-label">STEP {current_index + 1} OF {total}</div>'
+        f'<div class="sim-title">{html.escape(current["title"])}</div>'
+        '<div class="sim-box-label">BEFORE</div>'
+        f'<div class="sim-value">{html.escape(before_value)}</div>'
+        f'<div class="sim-action">↓ &nbsp; {html.escape(current["action"])} &nbsp; ↓</div>'
+        '<div class="sim-box-label">AFTER</div>'
+        f'<div class="sim-value">{html.escape(after_value)}</div>'
+        '<div class="sim-explain">'
+        '<strong>What is happening?</strong><br>'
+        f'{html.escape(current["explanation"])}'
+        '</div>'
+        f'<div class="sim-next">{html.escape(next_text)}</div>'
+        '</div>'
+    )
+    st.markdown(card_html, unsafe_allow_html=True)
+
+
+    # Controls.
+    previous_col, play_col, next_col, restart_col = st.columns(4)
+
+    with previous_col:
+        previous = st.button(
+            "◀ Previous",
+            key="sim_previous",
+            use_container_width=True,
+            disabled=current_index == 0,
+        )
+
+    with play_col:
+        play_label = "⏸ Pause" if st.session_state["sim_playing"] else "▶ Play"
+        play_pause = st.button(
+            play_label,
+            key="sim_play_pause",
+            type="primary",
+            use_container_width=True,
+        )
+
+    with next_col:
+        next_clicked = st.button(
+            "Next ▶",
+            key="sim_next",
+            use_container_width=True,
+            disabled=current_index >= total - 1,
+        )
+
+    with restart_col:
+        restart = st.button(
+            "↻ Restart",
+            key="sim_restart",
+            use_container_width=True,
+        )
+
+    if previous:
+        st.session_state["sim_playing"] = False
+        st.session_state["sim_step"] = max(0, current_index - 1)
+        st.rerun()
+
+    if play_pause:
+        if st.session_state["sim_playing"]:
+            st.session_state["sim_playing"] = False
+        else:
+            if current_index >= total - 1:
+                st.session_state["sim_step"] = 0
+            st.session_state["sim_playing"] = True
+        st.rerun()
+
+    if next_clicked:
+        st.session_state["sim_playing"] = False
+        st.session_state["sim_step"] = min(total - 1, current_index + 1)
+        st.rerun()
+
+    if restart:
+        st.session_state["sim_playing"] = False
+        st.session_state["sim_step"] = 0
+        st.rerun()
+
+    st.markdown("**Visualization Speed**")
+    speed = st.slider(
+        "Animation delay (seconds per step)",
+        min_value=0.5,
+        max_value=4.0,
+        value=float(st.session_state["sim_speed"]),
+        step=0.5,
+        key="sim_speed_slider",
+        help="Smaller values make the automatic animation faster.",
+    )
+    st.session_state["sim_speed"] = speed
+    st.caption(
+        f"Fast  ←  {speed:.1f} second{'s' if speed != 1 else ''} per step  →  Slow"
+    )
+
+    progress = (current_index + 1) / total
+    st.progress(progress)
+
+    # Automatic progression. The short sleep intentionally happens only while
+    # Play is active; each rerun advances exactly one stage.
+    if st.session_state["sim_playing"]:
+        if current_index < total - 1:
+            time.sleep(float(st.session_state["sim_speed"]))
+            st.session_state["sim_step"] = current_index + 1
+            st.rerun()
+        else:
+            st.session_state["sim_playing"] = False
+
+
 # =============================================================================
 # 6. SECTION RENDERERS
 # =============================================================================
+
 
 def render_theory_section():
     st.header("Theoretical Framework & Background")
@@ -840,6 +1262,12 @@ def render_simulation_section():
         )
 
     result = st.session_state["current_result"]
+
+    st.divider()
+    render_preprocessing_simulator(
+        result["original"],
+        remove_stops=remove_stops
+    )
 
     st.divider()
     st.subheader("Step-by-Step Transformation")
@@ -1190,6 +1618,18 @@ def init_session_state():
 
     if "current_result" not in st.session_state:
         st.session_state["current_result"] = None
+
+    if "sim_step" not in st.session_state:
+        st.session_state["sim_step"] = 0
+
+    if "sim_playing" not in st.session_state:
+        st.session_state["sim_playing"] = False
+
+    if "sim_speed" not in st.session_state:
+        st.session_state["sim_speed"] = 1.5
+
+    if "sim_signature" not in st.session_state:
+        st.session_state["sim_signature"] = None
 
 
 # =============================================================================
